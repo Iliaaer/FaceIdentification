@@ -5,7 +5,7 @@ import verifications as vf
 from RetinaFace.mobile_net import Net
 from database.fill import get_user, get_userID_to_photo
 
-db_reboot = True
+db_reboot = False
 db_path = "Face"
 model_name = vf.VERIF.FACENET  # WORK
 # model_name = vf.VERIF.FACENET512  # WORK
@@ -36,8 +36,8 @@ if __name__ == "__main__":
     while True:
         ret, frame = cap.read()
         tm.start()
-        dets = net.detect(frame)
         image_d = frame.copy()
+        dets = net.detect(frame)
 
         res = []
         for i, b in enumerate(dets):

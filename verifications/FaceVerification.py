@@ -54,7 +54,7 @@ class FaceVerification:
 
         self.initDB(db_path=db_path, db_reboot=db_reboot)
 
-    def __represent(self, image: np.ndarray):
+    def __represent(self, image: np.ndarray) -> pd.DataFrame:
         """
         This function represents facial image as vector. The function uses convolutional neural
         networks models to generate vector embeddings.

@@ -10,45 +10,49 @@ from RetinaFace.utils.box_utils import decode, decode_landm
 from RetinaFace.utils.nms.py_cpu_nms import py_cpu_nms
 
 
-def check_keys(model, pretrained_state_dict):
+def check_keys(model, pretrained_state_dict, logs: bool = False):
     ckpt_keys = set(pretrained_state_dict.keys())
     model_keys = set(model.state_dict().keys())
     used_pretrained_keys = model_keys & ckpt_keys
     unused_pretrained_keys = ckpt_keys - model_keys
     missing_keys = model_keys - ckpt_keys
-    print('Missing keys:{}'.format(len(missing_keys)))
-    print('Unused checkpoint keys:{}'.format(len(unused_pretrained_keys)))
-    print('Used keys:{}'.format(len(used_pretrained_keys)))
+    if logs:
+        print('Missing keys:{}'.format(len(missing_keys)))
+        print('Unused checkpoint keys:{}'.format(len(unused_pretrained_keys)))
+        print('Used keys:{}'.format(len(used_pretrained_keys)))
     assert len(used_pretrained_keys) > 0, 'load NONE from pretrained checkpoint'
     return True
 
 
-def remove_prefix(state_dict, prefix):
-    print('remove prefix \'{}\''.format(prefix))
+def remove_prefix(state_dict, prefix, logs: bool = False):
+    if logs:
+        print('remove prefix \'{}\''.format(prefix))
     f = lambda x: x.split(prefix, 1)[-1] if x.startswith(prefix) else x
     return {f(key): value for key, value in state_dict.items()}
 
 
-def load_model(model, pretrained_path, load_to_cpu):
-    print('Loading pretrained model from {}'.format(pretrained_path))
+def load_model(model, pretrained_path, load_to_cpu, logs: bool = False):
+    if logs:
+        print('Loading pretrained model from {}'.format(pretrained_path))
     if load_to_cpu:
         pretrained_dict = torch.load(pretrained_path, map_location=lambda storage, loc: storage)
     else:
         device = torch.cuda.current_device()
         pretrained_dict = torch.load(pretrained_path, map_location=lambda storage, loc: storage.cuda(device))
     if "state_dict" in pretrained_dict.keys():
-        pretrained_dict = remove_prefix(pretrained_dict['state_dict'], 'module.')
+        pretrained_dict = remove_prefix(pretrained_dict['state_dict'], 'module.', logs=logs)
     else:
-        pretrained_dict = remove_prefix(pretrained_dict, 'module.')
-    check_keys(model, pretrained_dict)
+        pretrained_dict = remove_prefix(pretrained_dict, 'module.', logs=logs)
+    check_keys(model, pretrained_dict, logs=logs)
     model.load_state_dict(pretrained_dict, strict=False)
     return model
 
 
 class Net:
-    def __init__(self, load2cpu: bool = False):
+    def __init__(self, load2cpu: bool = False, logs: bool = False,
+                 modelPath: str = 'RetinaFace/weights/mobilev3_Final.pth'):
         parser = argparse.ArgumentParser(description='Retinaface')
-        parser.add_argument('-m', '--trained_model', default='RetinaFace/weights/mobilev3_Final.pth',
+        parser.add_argument('-m', '--trained_model', default=modelPath,
                             type=str, help='Trained state_dict file path to open')
         parser.add_argument('--network', default='mobilev3',
                             help='Backbone network mobile0.25 & resnet50 & ghostnet & mobilev3')
@@ -67,14 +71,15 @@ class Net:
         torch.set_grad_enabled(False)
 
         self.net = RetinaFace(cfg=cfg_mnetv3)
-        self.net = load_model(self.net, self.args.trained_model, load_to_cpu=self.args.cpu)
+        self.net = load_model(self.net, self.args.trained_model, load_to_cpu=self.args.cpu, logs=logs)
         self.net.eval()
-        print('Finished loading model!')
+        if logs:
+            print('Finished loading model!')
 
         self.device = torch.device("cpu" if self.args.cpu else "cuda")
         self.net = self.net.to(self.device)
 
-    def detect(self, img_raw):
+    def detect(self, img_raw, logs: bool = False):
         img = np.float32(img_raw)
         # print(img.shape)
         im_height, im_width, _ = img.shape
@@ -87,7 +92,8 @@ class Net:
 
         tic = time.time()
         loc, conf, landms = self.net(img)  # forward pass
-        print('net forward time: {:.4f}ms'.format((time.time() - tic) * 1000))
+        if logs:
+            print('net forward time: {:.4f}ms'.format((time.time() - tic) * 1000))
 
         priorbox = PriorBox(cfg_mnetv3, image_size=(im_height, im_width))
         priors = priorbox.forward()

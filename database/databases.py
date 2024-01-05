@@ -4,7 +4,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database.models import Base
 
-__sqlite_database = "sqlite:///database/myDatabase.db"
+# __sqlite_database = "sqlite:///database/myDatabase.db"
+__sqlite_database = "sqlite:///database/test1.db"
 
 __engine = create_engine(__sqlite_database, echo=False)
 
