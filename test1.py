@@ -13,10 +13,12 @@ models_names = [vf.VERIF.FACENET, vf.VERIF.FACENET512, vf.VERIF.SFACE,
 
 test_number = 3
 people_number = 2
-
 db_reboot = False
-db_path = f"testFace/people{people_number}/test{test_number}/test"
-db_valid_path = f"testFace/people{people_number}/test{test_number}/validation"
+
+db_ = f"testFace/people{people_number}/test{test_number}"
+
+db_path = f"{db_}/test"
+db_valid_path = f"{db_}/validation"
 
 images = []
 for r, _, f in os.walk(db_valid_path):
@@ -26,11 +28,11 @@ for r, _, f in os.walk(db_valid_path):
             images.append(exact_path)
 print(*images)
 
-if not os.path.isdir(f"testFace/people{people_number}/test{test_number}/xlsx"):
-    os.mkdir(f"testFace/people{people_number}/test{test_number}/xlsx")
+if not os.path.isdir(f"{db_}/xlsx"):
+    os.mkdir(f"{db_}/xlsx")
 
-if not os.path.isdir(f"testFace/people{people_number}/test{test_number}/json"):
-    os.mkdir(f"testFace/people{people_number}/test{test_number}/json")
+if not os.path.isdir(f"{db_}/json"):
+    os.mkdir(f"{db_}/json")
 
 modes = {
     vf.VERIF.DEEPFACE: vf.FaceVerification(model_name=vf.VERIF.DEEPFACE, db_path=db_path, db_reboot=db_reboot),
@@ -81,8 +83,7 @@ for model_name in models_names:
 
         df = pd.DataFrame(result, columns=["Name", "Identity", "Value", "Check"])
 
-        df.to_excel(f"testFace/people{people_number}/test{test_number}/xlsx/result{test_number}_{model_name.name}_{metric.name}.xlsx")
+        df.to_excel(f"{db_}/xlsx/result{test_number}_{model_name.name}_{metric.name}.xlsx")
 
-        with open(f"testFace/people{people_number}/test{test_number}/json/result{test_number}_{model_name.name}_{metric.name}.json", 'w',
-                  encoding='utf-8') as f:
+        with open(f"{db_}/json/result{test_number}_{model_name.name}_{metric.name}.json", 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
