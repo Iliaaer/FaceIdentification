@@ -89,7 +89,6 @@ def changed_face_size(
         img: numpy array.
         target_size (tuple, optional): the target size of the extracted faces.
         Defaults to (224, 224).
-        Defaults to False.
 
     Returns:
         list: сhanged face size.
@@ -135,7 +134,7 @@ def get_normalize_image(img, model_name: VERIF):
     # face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
     face *= 255
 
-    if model_name == VERIF.FACENET.name or model_name == VERIF.FACENET512.name:
+    if model_name == VERIF.FACENET or model_name == VERIF.FACENET512:
         face = (face - face.mean()) / face.std()
 
     return face

@@ -14,16 +14,18 @@ model_name = vf.VERIF.FACENET  # WORK
 # model_name = vf.VERIF.DEEPFACE
 # model_name = vf.VERIF.VGGFACE  # WORK
 
-modes = {
-    vf.VERIF.FACENET:    vf.FaceVerification(model_name=vf.VERIF.FACENET, db_path=db_path, db_reboot=db_reboot),
-    vf.VERIF.FACENET512: vf.FaceVerification(model_name=vf.VERIF.FACENET512, db_path=db_path, db_reboot=db_reboot),
-    vf.VERIF.SFACE:      vf.FaceVerification(model_name=vf.VERIF.SFACE, db_path=db_path, db_reboot=db_reboot),
-    vf.VERIF.ARCFACE:    vf.FaceVerification(model_name=vf.VERIF.ARCFACE, db_path=db_path, db_reboot=db_reboot),
-    vf.VERIF.DEEPFACE:   vf.FaceVerification(model_name=vf.VERIF.DEEPFACE, db_path=db_path, db_reboot=db_reboot),
-    vf.VERIF.VGGFACE:    vf.FaceVerification(model_name=vf.VERIF.VGGFACE, db_path=db_path, db_reboot=db_reboot),
-}
+mode = vf.FaceVerification(model_name=model_name, db_path=db_path, db_reboot=db_reboot)
 
-mode = modes[model_name]
+# modes = {
+#     vf.VERIF.FACENET:    vf.FaceVerification(model_name=vf.VERIF.FACENET, db_path=db_path, db_reboot=db_reboot),
+#     vf.VERIF.FACENET512: vf.FaceVerification(model_name=vf.VERIF.FACENET512, db_path=db_path, db_reboot=db_reboot),
+#     vf.VERIF.SFACE:      vf.FaceVerification(model_name=vf.VERIF.SFACE, db_path=db_path, db_reboot=db_reboot),
+#     vf.VERIF.ARCFACE:    vf.FaceVerification(model_name=vf.VERIF.ARCFACE, db_path=db_path, db_reboot=db_reboot),
+#     vf.VERIF.DEEPFACE:   vf.FaceVerification(model_name=vf.VERIF.DEEPFACE, db_path=db_path, db_reboot=db_reboot),
+#     vf.VERIF.VGGFACE:    vf.FaceVerification(model_name=vf.VERIF.VGGFACE, db_path=db_path, db_reboot=db_reboot),
+# }
+#
+# mode = modes[model_name]
 
 if __name__ == "__main__":
     cap = cv2.VideoCapture(0)

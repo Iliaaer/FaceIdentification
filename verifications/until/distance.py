@@ -28,23 +28,23 @@ def l2_normalize(x):
 
 
 def findThreshold(model_name: VERIF, distance_metric: MT):
-
     base_threshold = {MT.COSINE: 0.40,
                       MT.EUCLIDEAN: 0.55,
                       MT.EUCLIDEAN_L2: 0.75}
 
     thresholds = {
-        VERIF.VGGFACE:    {MT.COSINE: 0.40,  MT.EUCLIDEAN: 0.60,   MT.EUCLIDEAN_L2: 0.86},
-        VERIF.FACENET:    {MT.COSINE: 0.40,  MT.EUCLIDEAN: 10,     MT.EUCLIDEAN_L2: 0.80},
-        VERIF.FACENET512: {MT.COSINE: 0.30,  MT.EUCLIDEAN: 23.56,  MT.EUCLIDEAN_L2: 1.04},
-        VERIF.ARCFACE:    {MT.COSINE: 0.68,  MT.EUCLIDEAN: 4.15,   MT.EUCLIDEAN_L2: 1.13},
-        VERIF.SFACE:      {MT.COSINE: 0.593, MT.EUCLIDEAN: 10.734, MT.EUCLIDEAN_L2: 1.055},
-        VERIF.DEEPFACE:   {MT.COSINE: 0.23,  MT.EUCLIDEAN: 64,     MT.EUCLIDEAN_L2: 0.64},
+        VERIF.VGGFACE: {MT.COSINE: 0.40, MT.EUCLIDEAN: 0.60, MT.EUCLIDEAN_L2: 0.86},
+        VERIF.FACENET: {MT.COSINE: 0.40, MT.EUCLIDEAN: 10, MT.EUCLIDEAN_L2: 0.80},
+        VERIF.FACENET512: {MT.COSINE: 0.30, MT.EUCLIDEAN: 23.56, MT.EUCLIDEAN_L2: 1.04},
+        VERIF.ARCFACE: {MT.COSINE: 0.68, MT.EUCLIDEAN: 4.15, MT.EUCLIDEAN_L2: 1.13},
+        VERIF.SFACE: {MT.COSINE: 0.593, MT.EUCLIDEAN: 10.734, MT.EUCLIDEAN_L2: 1.055},
+        VERIF.DEEPFACE: {MT.COSINE: 0.23, MT.EUCLIDEAN: 64, MT.EUCLIDEAN_L2: 0.64},
         # "Dlib": {MT.COSINE: 0.07, MT.EUCLIDEAN: 0.6, MT.EUCLIDEAN_L2: 0.4},
         # "OpenFace": {MT.COSINE: 0.10, MT.EUCLIDEAN: 0.55, MT.EUCLIDEAN_L2: 0.55},
         # "DeepID": {MT.COSINE: 0.015, MT.EUCLIDEAN: 45, MT.EUCLIDEAN_L2: 0.17},
     }
 
-    threshold = thresholds.get(model_name, base_threshold).get(distance_metric, 0.4)
+    # threshold = thresholds.get(model_name, base_threshold).get(distance_metric, 0.4)
 
-    return threshold
+    # return threshold
+    return thresholds[model_name][distance_metric]

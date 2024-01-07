@@ -39,7 +39,7 @@ class FaceVerification:
 
         self.representations = []
 
-        self.model_name = model_name.name
+        self.model_name = model_name
 
         print(model_name.name)
 
@@ -107,7 +107,7 @@ class FaceVerification:
         if not os.path.isdir(db_path):
             raise ValueError("Passed db_path does not exist!")
 
-        file_name = f"representations_{self.model_name}.pkl".lower()
+        file_name = f"representations_{self.model_name.name}.pkl".lower()
 
         if db_reboot and os.path.exists(f"{db_path}/{file_name}"):
             os.remove(f"{db_path}/{file_name}")
@@ -189,7 +189,8 @@ class FaceVerification:
         result_df[f"{self.model_name}_{distance_metric.name}"] = distances
         threshold = dst.findThreshold(self.model_name, distance_metric)
         result_df = result_df.drop(columns=[f"{self.model_name}_representation"])
-        result_df = result_df[result_df[f"{self.model_name}_{distance_metric.name}"] <= threshold]  # search res dst_min
+        # result_df = result_df[result_df[f"{self.model_name}_{distance_metric.name}"]
+        # <= threshold]  # search res dst_min
 
         # result_df = result_df[result_df[f"{self.model_name}_{distance_metric.name}"] <= 8]  # or take linalg.norm
 
