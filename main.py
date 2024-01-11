@@ -7,25 +7,27 @@ from database.fill import get_user, get_userID_to_photo
 
 db_reboot = False
 db_path = "Face"
-model_name = vf.VERIF.FACENET  # WORK
+models_names = [vf.VERIF.FACENET, vf.VERIF.FACENET512, vf.VERIF.SFACE,
+                vf.VERIF.ARCFACE, vf.VERIF.DEEPFACE, vf.VERIF.VGGFACE]
+# model_name = vf.VERIF.FACENET  # WORK
 # model_name = vf.VERIF.FACENET512  # WORK
 # model_name = vf.VERIF.SFACE
 # model_name = vf.VERIF.ARCFACE
 # model_name = vf.VERIF.DEEPFACE
 # model_name = vf.VERIF.VGGFACE  # WORK
 
-mode = vf.FaceVerification(model_name=model_name, db_path=db_path, db_reboot=db_reboot)
+# mode = vf.FaceVerification(model_name=model_name, db_path=db_path, db_reboot=db_reboot)
 
-# modes = {
-#     vf.VERIF.FACENET:    vf.FaceVerification(model_name=vf.VERIF.FACENET, db_path=db_path, db_reboot=db_reboot),
-#     vf.VERIF.FACENET512: vf.FaceVerification(model_name=vf.VERIF.FACENET512, db_path=db_path, db_reboot=db_reboot),
-#     vf.VERIF.SFACE:      vf.FaceVerification(model_name=vf.VERIF.SFACE, db_path=db_path, db_reboot=db_reboot),
-#     vf.VERIF.ARCFACE:    vf.FaceVerification(model_name=vf.VERIF.ARCFACE, db_path=db_path, db_reboot=db_reboot),
-#     vf.VERIF.DEEPFACE:   vf.FaceVerification(model_name=vf.VERIF.DEEPFACE, db_path=db_path, db_reboot=db_reboot),
-#     vf.VERIF.VGGFACE:    vf.FaceVerification(model_name=vf.VERIF.VGGFACE, db_path=db_path, db_reboot=db_reboot),
-# }
+modes = {
+    vf.VERIF.FACENET:    vf.FaceVerification(model_name=vf.VERIF.FACENET, db_path=db_path, db_reboot=db_reboot),
+    vf.VERIF.FACENET512: vf.FaceVerification(model_name=vf.VERIF.FACENET512, db_path=db_path, db_reboot=db_reboot),
+    vf.VERIF.SFACE:      vf.FaceVerification(model_name=vf.VERIF.SFACE, db_path=db_path, db_reboot=db_reboot),
+    vf.VERIF.ARCFACE:    vf.FaceVerification(model_name=vf.VERIF.ARCFACE, db_path=db_path, db_reboot=db_reboot),
+    vf.VERIF.DEEPFACE:   vf.FaceVerification(model_name=vf.VERIF.DEEPFACE, db_path=db_path, db_reboot=db_reboot),
+    vf.VERIF.VGGFACE:    vf.FaceVerification(model_name=vf.VERIF.VGGFACE, db_path=db_path, db_reboot=db_reboot),
+}
 #
-# mode = modes[model_name]
+mode = modes[models_names[0]]
 
 if __name__ == "__main__":
     cap = cv2.VideoCapture(0)
@@ -87,6 +89,7 @@ if __name__ == "__main__":
         tm.stop()
         cv2.putText(frame, 'FPS: {:.2f}'.format(tm.getFPS()), (0, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 0, 255))
+        cv2.putText(frame, mode.model_name.name, (100, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255))
 
         cv2.imshow('fourcc', frame)
         tm.reset()
@@ -97,6 +100,11 @@ if __name__ == "__main__":
             for img_detect, filename, _ in image_arrays:
                 cv2.imwrite(filename, img_detect)
                 print(f"[INFO] Save image to {filename}")
+
+        for number_i in range(1, 7):
+            if key == ord(str(number_i)):
+                mode = modes[models_names[number_i-1]]
+                print(f"[START] model {models_names[number_i-1].name}")
 
         if key == ord('q'):
             break

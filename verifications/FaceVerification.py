@@ -189,8 +189,7 @@ class FaceVerification:
         result_df[f"{self.model_name}_{distance_metric.name}"] = distances
         threshold = dst.findThreshold(self.model_name, distance_metric)
         result_df = result_df.drop(columns=[f"{self.model_name}_representation"])
-        # result_df = result_df[result_df[f"{self.model_name}_{distance_metric.name}"]
-        # <= threshold]  # search res dst_min
+        # result_df = result_df[result_df[f"{self.model_name}_{distance_metric.name}"] <= threshold]  # search res dst_min
 
         # result_df = result_df[result_df[f"{self.model_name}_{distance_metric.name}"] <= 8]  # or take linalg.norm
 

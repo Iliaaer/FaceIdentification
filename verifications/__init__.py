@@ -7,6 +7,5 @@ from verifications.until.functions import (
     get_home_path,
     get_target_size,
     changed_face_size,
+    get_normalize_image,
 )
-
-
