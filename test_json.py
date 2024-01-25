@@ -1,5 +1,9 @@
+import numpy as np
 import pandas as pd
 import json
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+
 import verifications as vf
 
 test_number = 3
@@ -23,27 +27,133 @@ with open(f"{db_}/json/result{test_number}_{model_name.name}_{metric.name}.json"
           encoding='utf-8') as f:
     data = json.load(f)
 
-result = []
+end_steps = 0
+
+for i in data["Result"]:
+    m = max(i["Value"])
+    if m > end_steps:
+        end_steps = m
+
+print(end_steps)
+
+results = []
 threshold = 0
+step = 0.005
 
-while threshold <= 2:
-    threshold += 0.005
-    for i in range(len(data["Name"])):
-        name, res = data["Name"][i], data["Result"][i]
-        name1, value1 = res["Identity_name"], res["Value"]
+pbar = tqdm(
+    range(0, len(data["Name"])),
+    desc="Finding representations"
+)
 
-        for _name1, _value1 in zip(name1, value1):
-            c1 = name.split("\\")[1].split("/")[0] == _name1.split("'\'")[-1].split("\\")[1].split("/")[0]
-            c2 = _value1 <= threshold
+for i in pbar:
+    name, res = data["Name"][i], data["Result"][i]
+    name1, value1 = res["Identity_name"], res["Value"]
 
-            result.append([name, _name1.split("'\'")[-1], _value1, _value1 <= threshold,
-                           name.split("\\")[1].split("/")[0],
-                           _name1.split("'\'")[-1].split("\\")[1].split("/")[0],
-                           c1,
-                           (int(c1) == 1 and int(c2) == 1)])
+    for _name1, _value1 in zip(name1, value1):
+        c1 = name.split("\\")[1].split("/")[0] == _name1.split("'\'")[-1].split("\\")[1].split("/")[0]
+        # result = [name, _name1.split("'\'")[-1], _value1]
+        result = [_value1, name.split("\\")[1].split("/")[0], _name1.split("'\'")[-1].split("\\")[1].split("/")[0]]
+        threshold = 0
+        while threshold <= end_steps:
+            c2 = float(_value1) <= float(threshold)
 
-        result.append([None, None, None, None, None, None, None, None])
+            result.append(c2 + c1 == 2 or (1-c2) + (1-c1) == 2)
+            threshold += step
+            threshold = round(threshold, 5)
 
-    df = pd.DataFrame(result, columns=["Name", "Identity", "Value", "Check", "Name1", "Name2", "Name1=Name2?", "Result"])
+        results.append(result)
 
-    df.to_excel(f"{db_}/xlsx/1/new_result{test_number}_{model_name.name}_{metric.name}_{str(threshold)}.xlsx")
+    results.append([None] * len(results[-1]))
+
+threshold = 0
+a = ["Data", "Name1", "Name1"]
+while threshold <= end_steps:
+    a.append(threshold)
+    threshold += step
+    threshold = round(threshold, 5)
+
+df = pd.DataFrame(results, columns=a)
+
+x = a.copy()[3:]
+print(x)
+datas = [0] * len(x)
+
+max_counter = 0
+for i in results:
+    if i[0] is None:
+        continue
+    for num in range(len(i)-3):
+        datas[num] += int(i[3 + num])
+    max_counter += 1
+
+max_number = max(datas)
+percentages = [number / max_number for number in datas]
+print(datas)
+print(percentages)
+print(max_counter)
+
+x = np.array(x)
+percentages = np.array(percentages)
+datas = np.array(datas)
+
+plt.figure(figsize=(15, 5))
+plt.plot(x, percentages, color='green', marker='o', markersize=2)
+plt.title(model_name.name)
+plt.grid(True)
+plt.xticks(np.arange(0, end_steps, end_steps/20))
+plt.xlim(0)
+# plt.xlim(0, end_steps+0.2)
+
+plt.savefig(f'{db_}/{model_name.name}.png', bbox_inches='tight', dpi=1200)
+plt.clf()
+
+# text = ""
+# text += f"Сумма 1+2 МАКС: {max(check12)}\n"
+# text += f"Соответствующий порог: {x[position]}\n"
+# text += f"Соответствующий счёт 0: {check0[position]}\n"
+# text += f"Соответствующий счёт 1: {check1[position]}\n"
+# text += f"Относительное обнаружение: {check1[position] / check13[0]}\n"
+# text += f"Отн. ошибка 0/(1+3): {check0[position] / check13[0]}\n"
+# text += f"Позиция: {position}\n"
+# text += f"Смещение: {mixing}"
+#
+# with open(f"{db_}/result/{model_name.name}/{model_name.name}.txt", "w") as file:
+#     file.write(text)
+
+
+# plt.figure(figsize=(15, 5))
+# plt.plot(x, check1, label='Счёт 1')
+# plt.plot(x, check2, label='Счёт 2')
+# plt.plot(x, check12, label='Сумма 1+2')
+# plt.plot(x, check3, label='Счёт 3')
+# plt.plot(x, check0, label='Счёт 0')
+# plt.title(model_name.name)
+# plt.grid(True)
+# plt.xticks(np.arange(0, end_steps, end_steps/20))
+# plt.xlim(0)
+# plt.legend()
+# plt.savefig(f'{db_}/result/{model_name.name}/new_{model_name.name}1.png', bbox_inches='tight', dpi=1200)
+# plt.clf()
+#
+# plt.figure(figsize=(15, 5))
+# plt.plot(x, check1_percentages, label='Счёт 1%')
+# plt.plot(x, check2_percentages, label='Счёт 2%')
+# plt.plot(x, check12_percentages, label='Сумма 1+2%')
+# plt.title(model_name.name)
+# plt.grid(True)
+# plt.xticks(np.arange(0, end_steps, end_steps/20))
+# plt.xlim(0)
+# plt.legend()
+# plt.savefig(f'{db_}/result/{model_name.name}/new_{model_name.name}2.png', bbox_inches='tight', dpi=1200)
+# plt.clf()
+#
+# plt.figure(figsize=(15, 5))
+# plt.plot(x, check12, label='Сумма 1+2')
+# plt.plot(x, check30, label='Сумма 3+0')
+# plt.title(model_name.name)
+# plt.grid(True)
+# plt.xticks(np.arange(0, end_steps, end_steps/20))
+# plt.xlim(0)
+# plt.legend()
+# plt.savefig(f'{db_}/result/{model_name.name}/new_{model_name.name}3.png', bbox_inches='tight', dpi=1200)
+# plt.clf()

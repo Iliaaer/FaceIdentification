@@ -66,8 +66,6 @@ class Net:
         parser.add_argument('-s', '--save_image', action="store_true", default=True, help='show detection results')
         parser.add_argument('--vis_thres', default=0.5, type=float, help='visualization_threshold')
         self.args = parser.parse_args()
-
-        torch.set_grad_enabled(False)
         torch.set_grad_enabled(False)
 
         self.net = RetinaFace(cfg=cfg_mnetv3)

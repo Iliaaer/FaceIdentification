@@ -4,7 +4,7 @@ from RetinaFace.mobile_net import Net
 
 net = Net(load2cpu=False)
 
-pathDataset = r"testFace/dataset/dontKnow"
+pathDataset = r"testFace/dataset/211-291/211291012"
 
 path_images = os.walk(pathDataset)
 
@@ -13,6 +13,7 @@ for r, _, f in path_images:
         if file.lower().split(".")[-1] in ["jpg", "jpeg", "png"]:
             exact_path = r + "/" + file
             image = cv2.imread(exact_path)
+            # image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
             image_old = image.copy()
             dets = net.detect(image)
 

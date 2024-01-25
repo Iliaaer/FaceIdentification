@@ -11,3 +11,8 @@ gdown~=4.7.1
 keras~=2.14.0
 pandas~=2.1.3
 SQLAlchemy~=2.0.23
+matplotlib~=3.8.2
+fastapi~=0.109.0
+uvicorn[standard]
+
+greenlet~=3.0.2
