@@ -37,4 +37,4 @@ async def index(request: Request):
 
 
 def close_camera():
-    return cap.isOpened()
+    return cap.release()
