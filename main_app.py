@@ -8,6 +8,7 @@ if __name__ == "__main__":
     task_camera_face.start()
 
     uvicorn.run(app, port=8000)
+    print("CAMERA close")
     close_camera()
 
     task_camera.join()

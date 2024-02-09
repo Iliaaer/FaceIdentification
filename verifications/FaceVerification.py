@@ -22,8 +22,22 @@ from verifications.until import distance as dst
 pd.options.display.float_format = '{:.5f}'.format
 
 
+def calculate_distance(source, target, distance_metric: MT):
+    if distance_metric == MT.COSINE:
+        return dst.findCosineDistance(source, target)
+    if distance_metric == MT.EUCLIDEAN:
+        return dst.findEuclideanDistance(source, target)
+    if distance_metric == MT.EUCLIDEAN_L2:
+        return dst.findEuclideanDistance(
+            dst.l2_normalize(source),
+            dst.l2_normalize(target),
+        )
+    raise ValueError(f"invalid distance metric passes - {distance_metric}")
+
+
 class FaceVerification:
-    def __init__(self, model_name: VERIF, db_path: str, db_reboot: bool = False):
+    def __init__(self, model_name: VERIF, db_path: str = None, db_reboot: bool = False):
+
         models = {
             VERIF.VGGFACE: VGGFace.loadModel,
             VERIF.FACENET: Facenet.loadModel,
@@ -31,10 +45,6 @@ class FaceVerification:
             VERIF.DEEPFACE: DeepFace.loadModel,
             VERIF.ARCFACE: ArcFace.loadModel,
             VERIF.SFACE: SFace.load_model,
-
-            # "OpenFace": OpenFace.loadModel,
-            # "DeepID": DeepID.loadModel,
-            # "Dlib": DlibWrapper.loadModel,
         }
 
         self.representations = []
@@ -51,8 +61,9 @@ class FaceVerification:
         self.target_size = get_target_size(model_name)
 
         self.model = self.model()
-
-        self.initDB(db_path=db_path, db_reboot=db_reboot)
+        self.df = None
+        if db_path:
+            self.init_db(db_path=db_path, db_reboot=db_reboot)
 
     def __represent(self, image: np.ndarray) -> pd.DataFrame:
         """
@@ -71,39 +82,11 @@ class FaceVerification:
         """
 
         face = image.copy()
-
-        # face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
-        # if self.model_name == VERIF.FACENET.name:
-        #     face = face.astype('float32')
-        #     face = (face - face.mean()) / face.std()
-        #
-        # if self.model_name == VERIF.ARCFACE:
-        #     face = face.astype('float32')
-        #     # face /= 127.5
-        #     # face -= 1
-        #     face -= 127.5
-        #     face /= 128
-
-        # if self.model_name == VERIF.ARCFACE:
-        #     face -= 127.5
-        #     face /= 128
-
         face = get_normalize_image(face, self.model_name)
-
         face = np.expand_dims(face, axis=0)
-
         return self.model.predict(face)[0]
 
-        # img = changed_face_size(img, target_size=self.target_size, grayscale=False)
-        # # img = cv2.resize(img, self.target_size)
-        #
-        # img = np.expand_dims(img, axis=0)
-        # if img.max() > 1:
-        #     img /= 255
-        #
-        # return self.model.predict(img)[0].tolist()
-
-    def initDB(self, db_path: str, db_reboot: bool = False):
+    def init_db(self, db_path: str, db_reboot: bool = False):
         if not os.path.isdir(db_path):
             raise ValueError("Passed db_path does not exist!")
 
@@ -113,7 +96,6 @@ class FaceVerification:
             os.remove(f"{db_path}/{file_name}")
 
         employees = []
-        employees_not = []
 
         for r, _, f in os.walk(db_path):
             for file in f:
@@ -170,34 +152,28 @@ class FaceVerification:
         for index, instance in result_df.iterrows():
             source_representation = instance[f"{self.model_name}_representation"]
 
-            if distance_metric == MT.COSINE:
-                distance = dst.findCosineDistance(source_representation, target_representation)
-            elif distance_metric == MT.EUCLIDEAN:
-                distance = dst.findEuclideanDistance(source_representation, target_representation)
-            elif distance_metric == MT.EUCLIDEAN_L2:
-                distance = dst.findEuclideanDistance(
-                    dst.l2_normalize(source_representation),
-                    dst.l2_normalize(target_representation),
-                )
-            else:
-                raise ValueError(f"invalid distance metric passes - {distance_metric}")
-
-            # distance = np.linalg.norm(source_representation - target_representation)
+            distance = calculate_distance(
+                source=source_representation,
+                target=target_representation,
+                distance_metric=distance_metric
+            )
 
             distances.append(distance)
 
         result_df[f"{self.model_name}_{distance_metric.name}"] = distances
         threshold = dst.findThreshold(self.model_name, distance_metric)
         result_df = result_df.drop(columns=[f"{self.model_name}_representation"])
-        # result_df = result_df[result_df[f"{self.model_name}_{distance_metric.name}"] <= threshold]  # search res dst_min
-
-        # result_df = result_df[result_df[f"{self.model_name}_{distance_metric.name}"] <= 8]  # or take linalg.norm
+        result_df = result_df[result_df[f"{self.model_name}_{distance_metric.name}"] <= threshold]  # search res dst_min
 
         result_df = result_df.sort_values(
             by=[f"{self.model_name}_{distance_metric.name}"], ascending=True
         ).reset_index(drop=True)
 
         return result_df
+
+    def represent_one(self, image: np.ndarray):
+        target_obj = changed_face_size(img=image, target_size=self.target_size)
+        return self.__represent(image=target_obj)
 
 
 init_folder()

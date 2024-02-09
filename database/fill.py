@@ -38,15 +38,21 @@ def get_userID_to_photo(path: str) -> int:
         return user_id.user_id
     return user_id
 
-# ilya = get_user(get_userID_to_photo("Face/Zarubin_Ilya/Ilya.png"))
+
+# post_photo("Face/01", 1)
+# post_photo("Face/02", 2)
+# post_photo("Face/03", 3)
+# post_photo("Face/04", 4)
+
+# ilya = get_user(get_userID_to_photo("Face/01/Ilya.png"))
 # print(ilya.full_name)
 
-# print(get_userID_to_photo("Face/Zarubin_Ilya/Ilya6.png"))
+# print(get_userID_to_photo("Face/01/Ilya6.png"))
 
-# post_photo("Face/Zarubin_Ilya/Ilya.png", 1)
-# post_photo("Face/Zarubin_Ilya/Ilya2.png", 1)
-# post_photo("Face/Zarubin_Ilya/Ilya3.png", 1)
-# post_photo("Face/Zarubin_Ilya/Ilya4.png", 1)
+# post_photo("Face/01/Ilya.png", 1)
+# post_photo("Face/01/Ilya2.png", 1)
+# post_photo("Face/01/Ilya3.png", 1)
+# post_photo("Face/01/Ilya4.png", 1)
 
 # ilya = get_ueser(1)
 # print(ilya.full_name)

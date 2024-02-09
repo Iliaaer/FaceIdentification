@@ -142,7 +142,7 @@ def get_normalize_image(img, model_name: VERIF):
 
 if __name__ == "__main__":
     # img = cv2.imread("../../Face/29112023_223352_0__0.9997974.png")
-    img = cv2.imread("../../Face/Zarubin_Ilya/Ilya2.png")
+    img = cv2.imread("../../Face/01/Ilya2.png")
     print(img.shape, type(img))
 
     cv2.imshow("1", img)

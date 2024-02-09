@@ -66,11 +66,12 @@ if __name__ == "__main__":
                 print(detect)
 
                 if len(detect):
-                    candidant = detect.iloc[0]
+                    candidate = detect.iloc[0]
                     dst = detect.columns[-1]
 
-                    path = candidant["identity"].replace("\\", "/")
+                    path = "/".join(candidate["identity"].replace("\\", "/").split("/")[:-1])
 
+                    print(path)
                     user_id = get_userID_to_photo(path=path)
                     if user_id:
                         user = get_user(user_id)
@@ -89,7 +90,9 @@ if __name__ == "__main__":
         tm.stop()
         cv2.putText(frame, 'FPS: {:.2f}'.format(tm.getFPS()), (0, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 0, 255))
-        cv2.putText(frame, mode.model_name.name, (100, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255))
+
+        if _is_recognition:
+            cv2.putText(frame, mode.model_name.name, (100, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255))
 
         cv2.imshow('fourcc', frame)
         tm.reset()
@@ -101,8 +104,13 @@ if __name__ == "__main__":
                 cv2.imwrite(filename, img_detect)
                 print(f"[INFO] Save image to {filename}")
 
+        if key == ord("0"):
+            _is_recognition = False
+            print("[INFO] Recognition is dont work")
+
         for number_i in range(1, 7):
             if key == ord(str(number_i)):
+                _is_recognition = True
                 mode = modes[models_names[number_i-1]]
                 print(f"[START] model {models_names[number_i-1].name}")
 

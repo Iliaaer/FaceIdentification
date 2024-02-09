@@ -1,4 +1,5 @@
 opencv-python~=4.8.1.78
+opencv-contrib-python
 tensorflow~=2.14.0
 torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu117^C
 onnx?
@@ -13,6 +14,7 @@ pandas~=2.1.3
 SQLAlchemy~=2.0.23
 matplotlib~=3.8.2
 fastapi~=0.109.0
-uvicorn[standard]
+uvicorn[standard]~=0.27.0
 
 greenlet~=3.0.2
+scipy~=1.12.0
