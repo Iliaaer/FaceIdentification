@@ -65,10 +65,10 @@ def get_target_size(model_name: VERIF) -> tuple:
         VERIF.DEEPFACE: TSM.DEEPFACE,
         VERIF.ARCFACE: TSM.ARCFACE,
         VERIF.SFACE: TSM.SFACE,
+        VERIF.DLIB: TSM.DLIB
 
         # "OpenFace": (96, 96),
         # "DeepID": (47, 55),
-        # "Dlib": (150, 150),
     }
 
     target_size = target_sizes.get(model_name).value[0]

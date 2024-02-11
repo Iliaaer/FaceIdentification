@@ -5,17 +5,20 @@ import numpy as np
 
 
 class VerificationTracker:
-    def __init__(self, max_disappeared: int = 5):
+    def __init__(self, max_disappeared: int = 5, window_representations: int = 10):
+        self.window_representations = window_representations
         self.nextObjectID = 0
         self.disappeared = OrderedDict()
         self.rects = OrderedDict()
         self.representations = OrderedDict()
+        self.representations_list = OrderedDict()
         self.maxDisappeared = max_disappeared
-        # self.name = OrderedDict()
+        self.name = OrderedDict()
 
     def register(self, rects, representation):
         self.rects[self.nextObjectID] = np.array(rects)
         self.representations[self.nextObjectID] = representation
+        self.representations_list[self.nextObjectID] = [representation]
         self.disappeared[self.nextObjectID] = 0
         self.nextObjectID += 1
 
@@ -23,7 +26,7 @@ class VerificationTracker:
         del self.disappeared[object_id]
         del self.rects[object_id]
         del self.representations[object_id]
-
+        del self.representations_list[object_id]
         if self.rects:
             self.nextObjectID = max(self.rects.keys()) + 1
         else:
@@ -58,6 +61,9 @@ class VerificationTracker:
                 object_id = objects_id[row]
                 self.rects[object_id] = rects[col]
                 self.representations[object_id] = representations[col]
+                self.representations_list[object_id].append(representations[col])
+                if len(self.representations_list[object_id]) > self.window_representations:
+                    self.representations_list[object_id].pop(0)
                 self.disappeared[object_id] = 0
                 used_rows.add(row)
                 used_cols.add(col)
@@ -77,6 +83,15 @@ class VerificationTracker:
                     self.register(rects[col], representations[col])
 
         return self.rects, self.representations
+
+    def get_representations_list(self):
+        return self.representations_list
+
+    def set_name(self, name: str, object_id: int):
+        self.name[object_id] = name
+
+    def get_name(self, object_id: int):
+        return self.name.get(object_id, None)
 
 
 class CentroidTracker:

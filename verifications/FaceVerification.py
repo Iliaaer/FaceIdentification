@@ -13,6 +13,7 @@ from verifications.basemodels import (
     DeepFace,
     ArcFace,
     SFace,
+    Dlib,
 )
 from verifications.until.transfers import Metric as MT
 from verifications.until.transfers import VerificationFase as VERIF
@@ -45,6 +46,7 @@ class FaceVerification:
             VERIF.DEEPFACE: DeepFace.loadModel,
             VERIF.ARCFACE: ArcFace.loadModel,
             VERIF.SFACE: SFace.load_model,
+            VERIF.DLIB: Dlib.DlibClient,
         }
 
         self.representations = []
@@ -61,6 +63,7 @@ class FaceVerification:
         self.target_size = get_target_size(model_name)
 
         self.model = self.model()
+
         self.df = None
         if db_path:
             self.init_db(db_path=db_path, db_reboot=db_reboot)
@@ -140,12 +143,42 @@ class FaceVerification:
 
         self.df = pd.DataFrame(self.representations, columns=["identity", f"{self.model_name}_representation"])
 
-    def find(self, image: np.ndarray, distance_metric: MT = MT.COSINE):
+    def find_image(self, image: np.ndarray, distance_metric: MT = MT.COSINE):
         target_obj = changed_face_size(img=image,
                                        target_size=self.target_size)
 
         target_representation = self.__represent(image=target_obj)
 
+        result_df = self.df.copy()
+
+        distances = []
+        for index, instance in result_df.iterrows():
+            source_representation = instance[f"{self.model_name}_representation"]
+
+            distance = calculate_distance(
+                source=source_representation,
+                target=target_representation,
+                distance_metric=distance_metric
+            )
+
+            distances.append(distance)
+
+        result_df[f"{self.model_name}_{distance_metric.name}"] = distances
+        threshold = dst.findThreshold(self.model_name, distance_metric)
+        result_df = result_df.drop(columns=[f"{self.model_name}_representation"])
+        # result_df = result_df[result_df[f"{self.model_name}_{distance_metric.name}"] <= threshold]  # search res dst_min
+
+        result_df = result_df.sort_values(
+            by=[f"{self.model_name}_{distance_metric.name}"], ascending=True
+        ).reset_index(drop=True)
+
+        return result_df
+
+    def represent_one(self, image: np.ndarray):
+        target_obj = changed_face_size(img=image, target_size=self.target_size)
+        return self.__represent(image=target_obj)
+
+    def find_representation(self, target_representation, distance_metric: MT = MT.COSINE):
         result_df = self.df.copy()
 
         distances = []
@@ -171,16 +204,5 @@ class FaceVerification:
 
         return result_df
 
-    def represent_one(self, image: np.ndarray):
-        target_obj = changed_face_size(img=image, target_size=self.target_size)
-        return self.__represent(image=target_obj)
-
 
 init_folder()
-
-"""
-
-verify
-find
-
-"""

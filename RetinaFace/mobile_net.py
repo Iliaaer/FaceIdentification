@@ -1,5 +1,4 @@
 from __future__ import print_function
-import argparse
 import time
 import numpy as np
 import torch
@@ -49,32 +48,29 @@ def load_model(model, pretrained_path, load_to_cpu, logs: bool = False):
 
 
 class Net:
-    def __init__(self, load2cpu: bool = False, logs: bool = False,
-                 modelPath: str = 'RetinaFace/weights/mobilev3_Final.pth'):
-        parser = argparse.ArgumentParser(description='Retinaface')
-        parser.add_argument('-m', '--trained_model', default=modelPath,
-                            type=str, help='Trained state_dict file path to open')
-        parser.add_argument('--network', default='mobilev3',
-                            help='Backbone network mobile0.25 & resnet50 & ghostnet & mobilev3')
-        parser.add_argument('--image', type=str, default=r'./curve/face.jpg', help='detect images')
-        parser.add_argument('--fourcc', type=int, default=1, help='detect on webcam')
-        parser.add_argument('--cpu', action="store_true", default=load2cpu, help='Use cpu inference')
-        parser.add_argument('--confidence_threshold', default=0.02, type=float, help='confidence_threshold')
-        parser.add_argument('--top_k', default=5000, type=int, help='top_k')
-        parser.add_argument('--nms_threshold', default=0.4, type=float, help='nms_threshold')
-        parser.add_argument('--keep_top_k', default=750, type=int, help='keep_top_k')
-        parser.add_argument('-s', '--save_image', action="store_true", default=True, help='show detection results')
-        parser.add_argument('--vis_thres', default=0.5, type=float, help='visualization_threshold')
-        self.args = parser.parse_args()
+    def __init__(self,
+                 load2cpu: bool = False,
+                 logs: bool = False,
+                 model_path: str = 'RetinaFace/weights/mobilev3_Final.pth',
+                 confidence_threshold: float = 0.02,
+                 top_k: int = 5000,
+                 nms_threshold: float = 0.4,
+                 keep_top_k: int = 750):
+
         torch.set_grad_enabled(False)
 
+        self.confidence_threshold: float = confidence_threshold
+        self.top_k: int = top_k
+        self.nms_threshold: float = nms_threshold
+        self.keep_top_k: int = keep_top_k
+
         self.net = RetinaFace(cfg=cfg_mnetv3)
-        self.net = load_model(self.net, self.args.trained_model, load_to_cpu=self.args.cpu, logs=logs)
+        self.net = load_model(self.net, model_path, load_to_cpu=load2cpu, logs=logs)
         self.net.eval()
         if logs:
             print('Finished loading model!')
 
-        self.device = torch.device("cpu" if self.args.cpu else "cuda")
+        self.device = torch.device("cpu" if load2cpu else "cuda")
         self.net = self.net.to(self.device)
 
     def detect(self, img_raw, logs: bool = False):
@@ -110,26 +106,26 @@ class Net:
         landms = landms.cpu().numpy()
 
         # ignore low scores
-        inds = np.where(scores > self.args.confidence_threshold)[0]
+        inds = np.where(scores > self.confidence_threshold)[0]
         boxes = boxes[inds]
         landms = landms[inds]
         scores = scores[inds]
 
         # keep top-K before NMS
-        order = scores.argsort()[::-1][:self.args.top_k]
+        order = scores.argsort()[::-1][:self.top_k]
         boxes = boxes[order]
         landms = landms[order]
         scores = scores[order]
 
         # do NMS
         dets = np.hstack((boxes, scores[:, np.newaxis])).astype(np.float32, copy=False)
-        keep = py_cpu_nms(dets, self.args.nms_threshold)
+        keep = py_cpu_nms(dets, self.nms_threshold)
         dets = dets[keep, :]
         landms = landms[keep]
 
         # keep top-K faster NMS
-        dets = dets[:self.args.keep_top_k, :]
-        landms = landms[:self.args.keep_top_k, :]
+        dets = dets[:self.keep_top_k, :]
+        landms = landms[:self.keep_top_k, :]
 
         dets = np.concatenate((dets, landms), axis=1)
 

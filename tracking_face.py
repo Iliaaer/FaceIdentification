@@ -13,29 +13,30 @@ if __name__ == "__main__":
     tm = cv2.TickMeter()
     net = Net(load2cpu=False)
 
+    ret, frame = cap.read()
+    H, W = frame.shape[:2]
+
     while True:
         ret, frame = cap.read()
         tm.start()
         image_d = frame.copy()
         detect_faces = net.detect(frame)
 
-        res = []
-        for i, b in enumerate(detect_faces):
+        faces_detections = []
+        for b in detect_faces:
             if b[4] < THRESHOLD_FACE_DETECT:
                 continue
             b_new = list(map(int, b))
-            img_detect = image_d[b_new[1]:b_new[3], b_new[0]:b_new[2]]
-            if 0 in img_detect.shape:
-                continue
-            res.append(b)
-
-        faces_detections = []
-        for i, b in enumerate(res):
-            text = "{:.4f}".format(b[4])
-            b_new = list(map(int, b))
             x1, y1, x2, y2 = b_new[:4]
+
+            x1 = max(0, min(W, x1))
+            x2 = max(0, min(W, x2))
+
+            y1 = max(0, min(H, y1))
+            y2 = max(0, min(H, y2))
+            img_detect = image_d[b_new[1]:b_new[3], b_new[0]:b_new[2]]
+
             faces_detections.append([x1, y1, x2, y2])
-            # cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
 
         boxes_ids = tracker.update(faces_detections)
         print(len(faces_detections), end="--")

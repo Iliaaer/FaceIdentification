@@ -19,16 +19,21 @@ router = APIRouter(
 
 window: bool = False
 
+H, W = None, None
+
 
 def get_frame():
     """Функция генератора потокового видео."""
     global outputFrame1, lock
     global cap
+    global H, W
     print(0)
     while True:
         if not cap.isOpened():
             break
         ret, frame = cap.read()
+        if not H:
+            H, W = frame.shape[:2]
         if not ret:
             continue
         if window:
@@ -45,6 +50,7 @@ def get_frame_face():
     global outputFrame1, lock
     global outputFrame2
     global net, cap
+    global H, W
     print(1)
     while True:
         if not cap.isOpened():
@@ -59,24 +65,20 @@ def get_frame_face():
         if frame is None:
             continue
 
-        image_d = frame.copy()
         dets = net.detect(frame)
 
-        res = []
-        for i, b in enumerate(dets):
+        for b in dets:
             if b[4] < 0.7:
                 continue
             b_new = list(map(int, b))
-            if 0 in image_d[b_new[1]:b_new[3], b_new[0]:b_new[2]].shape:
-                continue
-            res.append(b)
+            x1, y1, x2, y2 = b_new[:4]
 
-        # image_arrays = []
+            x1 = max(0, min(W, x1))
+            x2 = max(0, min(W, x2))
+            y1 = max(0, min(H, y1))
+            y2 = max(0, min(H, y2))
 
-        for i, b in enumerate(res):
-            text = "{:.4f}".format(b[4])
-            b_new = list(map(int, b))
-            cv2.rectangle(frame, (b_new[0], b_new[1]), (b_new[2], b_new[3]), (0, 255, 0), 2)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
 
         if window:
             cv2.imshow("2", frame)

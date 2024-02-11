@@ -5,6 +5,8 @@ import verifications as vf
 from RetinaFace.mobile_net import Net
 from database.fill import get_user, get_userID_to_photo
 
+THRESHOLD_FACE_DETECT = 0.7
+
 db_reboot = False
 db_path = "Face"
 models_names = [vf.VERIF.FACENET, vf.VERIF.FACENET512, vf.VERIF.SFACE,
@@ -19,12 +21,12 @@ models_names = [vf.VERIF.FACENET, vf.VERIF.FACENET512, vf.VERIF.SFACE,
 # mode = vf.FaceVerification(model_name=model_name, db_path=db_path, db_reboot=db_reboot)
 
 modes = {
-    vf.VERIF.FACENET:    vf.FaceVerification(model_name=vf.VERIF.FACENET, db_path=db_path, db_reboot=db_reboot),
+    vf.VERIF.FACENET: vf.FaceVerification(model_name=vf.VERIF.FACENET, db_path=db_path, db_reboot=db_reboot),
     vf.VERIF.FACENET512: vf.FaceVerification(model_name=vf.VERIF.FACENET512, db_path=db_path, db_reboot=db_reboot),
-    vf.VERIF.SFACE:      vf.FaceVerification(model_name=vf.VERIF.SFACE, db_path=db_path, db_reboot=db_reboot),
-    vf.VERIF.ARCFACE:    vf.FaceVerification(model_name=vf.VERIF.ARCFACE, db_path=db_path, db_reboot=db_reboot),
-    vf.VERIF.DEEPFACE:   vf.FaceVerification(model_name=vf.VERIF.DEEPFACE, db_path=db_path, db_reboot=db_reboot),
-    vf.VERIF.VGGFACE:    vf.FaceVerification(model_name=vf.VERIF.VGGFACE, db_path=db_path, db_reboot=db_reboot),
+    vf.VERIF.SFACE: vf.FaceVerification(model_name=vf.VERIF.SFACE, db_path=db_path, db_reboot=db_reboot),
+    vf.VERIF.ARCFACE: vf.FaceVerification(model_name=vf.VERIF.ARCFACE, db_path=db_path, db_reboot=db_reboot),
+    vf.VERIF.DEEPFACE: vf.FaceVerification(model_name=vf.VERIF.DEEPFACE, db_path=db_path, db_reboot=db_reboot),
+    vf.VERIF.VGGFACE: vf.FaceVerification(model_name=vf.VERIF.VGGFACE, db_path=db_path, db_reboot=db_reboot),
 }
 #
 mode = modes[models_names[0]]
@@ -35,34 +37,35 @@ if __name__ == "__main__":
     tm = cv2.TickMeter()
     net = Net(load2cpu=False)
 
+    ret, frame = cap.read()
+    H, W = frame.shape[:2]
+
     _is_recognition: bool = True
 
     while True:
         ret, frame = cap.read()
         tm.start()
         image_d = frame.copy()
-        dets = net.detect(frame)
-
-        res = []
-        for i, b in enumerate(dets):
-            if b[4] < 0.7:
-                continue
-            b_new = list(map(int, b))
-            img_detect = image_d[b_new[1]:b_new[3], b_new[0]:b_new[2]]
-            if 0 in img_detect.shape:
-                continue
-            res.append(b)
+        detect_faces = net.detect(frame)
 
         image_arrays = []
 
-        for i, b in enumerate(res):
-            text = "{:.4f}".format(b[4])
-            b_new = list(map(int, b))
+        for i, detect_face in enumerate(detect_faces):
+            if detect_face[4] < THRESHOLD_FACE_DETECT:
+                continue
+            detect_face = list(map(int, detect_face))
+            x1, y1, x2, y2 = detect_face[:4]
 
-            img_detect = image_d[b_new[1]:b_new[3], b_new[0]:b_new[2]]
+            x1 = max(0, min(W, x1))
+            x2 = max(0, min(W, x2))
+
+            y1 = max(0, min(H, y1))
+            y2 = max(0, min(H, y2))
+
+            img_detect = frame[y1:y2, x1:x2]
 
             if _is_recognition:
-                detect = mode.find(image=img_detect, distance_metric=vf.MT.COSINE)
+                detect = mode.find_image(image=img_detect, distance_metric=vf.MT.COSINE)
                 print(detect)
 
                 if len(detect):
@@ -78,14 +81,14 @@ if __name__ == "__main__":
                         if user:
                             full_name = user.full_name
 
-                            cv2.putText(frame, str(user_id), (b_new[0], b_new[1] + 30), cv2.FONT_HERSHEY_SIMPLEX,
+                            cv2.putText(frame, str(user_id), (x1, y1 + 30), cv2.FONT_HERSHEY_SIMPLEX,
                                         1, (0, 0, 255), 2)
 
-            filename = f"Face/{datetime.now().strftime('%d%m%Y_%H%M%S')}_{str(i)}__{str(b[4])}.png"
+            filename = f"Face/{datetime.now().strftime('%d%m%Y_%H%M%S')}_{str(i)}.png"
 
-            image_arrays.append([img_detect, filename, b[4]])
+            image_arrays.append([img_detect, filename])
 
-            cv2.rectangle(frame, (b_new[0], b_new[1]), (b_new[2], b_new[3]), (0, 255, 0), 2)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
         tm.stop()
         cv2.putText(frame, 'FPS: {:.2f}'.format(tm.getFPS()), (0, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
@@ -111,8 +114,8 @@ if __name__ == "__main__":
         for number_i in range(1, 7):
             if key == ord(str(number_i)):
                 _is_recognition = True
-                mode = modes[models_names[number_i-1]]
-                print(f"[START] model {models_names[number_i-1].name}")
+                mode = modes[models_names[number_i - 1]]
+                print(f"[START] model {models_names[number_i - 1].name}")
 
         if key == ord('q'):
             break

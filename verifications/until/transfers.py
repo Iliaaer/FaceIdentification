@@ -8,6 +8,7 @@ class VerificationFase(Enum):
     DEEPFACE: int = 3
     ARCFACE: int = 4
     SFACE: int = 5
+    DLIB: int = 6
 
 
 class TargetSizeModels(Enum):
@@ -17,6 +18,7 @@ class TargetSizeModels(Enum):
     DEEPFACE = (152, 152),
     ARCFACE = (112, 112),
     SFACE = (112, 112),
+    DLIB = (150, 150),
 
 
 class Metric(Enum):

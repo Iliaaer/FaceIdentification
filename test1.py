@@ -89,13 +89,13 @@ for people_number in pbar_people:
                     "Result": []
                 }
                 image = cv2.imread(images[0])
-                detect = mode.find(image=image, distance_metric=metric)
+                detect = mode.find_image(image=image, distance_metric=metric)
 
                 start_time = time.time()
                 print("[INFO START]")
                 for name in images:
                     image = cv2.imread(name)
-                    detect = mode.find(image=image, distance_metric=metric)
+                    detect = mode.find_image(image=image, distance_metric=metric)
 
                     data["Name"].append(name)
                     res = {"Identity_name": [], "Value": []}
